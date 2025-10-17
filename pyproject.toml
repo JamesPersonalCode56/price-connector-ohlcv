@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "connector-clean-architecture"
+version = "0.1.0"
+description = "Demo connector organized using clean architecture"
+authors = ["Minh Le <lgm05062002@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "domain", from = "src" },
+    { include = "application", from = "src" },
+    { include = "infrastructure", from = "src" },
+    { include = "interfaces", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+websockets = "^12.0"
+httpx = "^0.27.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.0"
+mypy = "^1.10.0"
+pytest = "^8.1.0"
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = ["src"]
+strict_optional = true
+namespace_packages = true
+explicit_package_bases = true
+
+[tool.poetry.scripts]
+connector-cli = "interfaces.cli.main:main"
+connector-wss = "interfaces.ws_server.main:main"
+
+[build-system]
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api"
