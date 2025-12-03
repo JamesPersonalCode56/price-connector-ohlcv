@@ -1,64 +1,42 @@
-# Quick Start Guide - v0.2.0
+# Hướng dẫn nhanh (Quickstart)
 
-##  5-Minute Setup
+## Thiết lập trong 5 phút
 
-### 1. Install Dependencies
-
+1) Cài phụ thuộc
 ```bash
-# Option A: pip
+# Pip
 pip install -r requirements.txt
-
-# Option B: Poetry (recommended)
+# Hoặc Poetry
 poetry install
 ```
 
-### 2. Configure (Optional - has defaults)
-
+2) Cấu hình (tùy chọn, có giá trị mặc định)
 ```bash
 cp .env.example .env
-# Edit .env if you want to customize settings
+# Chỉnh .env nếu cần thay host/port/log/metrics
 ```
 
-### 3. Start the WebSocket Server
-
+3) Khởi chạy WebSocket server
 ```bash
-poetry run connector-wss
+poetry run connector-wss --host 0.0.0.0 --port 8765
 ```
+Log khởi động sẽ báo port 8765 (WS) và 8766 (health/metrics).
 
-You'll see:
-```
-INFO - Starting WebSocket server host=0.0.0.0 port=8765
-INFO - Health check server started host=0.0.0.0 port=8766
-INFO - WebSocket server ready to accept connections
-```
-
-### 4. Verify It's Running
-
+4) Kiểm tra hoạt động
 ```bash
-# Check health
 curl http://localhost:8766/health
-
-# Check readiness
 curl http://localhost:8766/ready
-
-# Get metrics
 curl http://localhost:8766/metrics
 ```
 
-### 5. Connect a Client
-
+5) Kết nối thử từ client
 ```bash
-# In another terminal, test with websocat or your client
 echo '{"exchange":"binance","contract_type":"spot","symbols":["BTCUSDT"],"limit":5}' | websocat ws://localhost:8765
 ```
 
----
+## Giám sát nhanh với Prometheus
 
-##  Quick Monitoring Setup
-
-### Using Prometheus
-
-1. Add to `prometheus.yml`:
+1) Thêm vào `prometheus.yml`:
 ```yaml
 scrape_configs:
   - job_name: 'ohlcv'
@@ -66,17 +44,14 @@ scrape_configs:
       - targets: ['localhost:8766']
 ```
 
-2. Start Prometheus:
+2) Chạy Prometheus:
 ```bash
 prometheus --config.file=prometheus.yml
 ```
 
-3. Query metrics at `http://localhost:9090`
-
-### Key Metrics to Watch
-
+3) Một số truy vấn hữu ích:
 ```promql
-# Quotes per second
+# Số quote mỗi giây
 rate(connector_quotes_processed_total[1m])
 
 # 95th percentile latency

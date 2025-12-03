@@ -1,4 +1,4 @@
-# Implementation Summary - v0.2.0 Upgrade
+# Tóm tắt triển khai / nâng cấp (v0.2.0)
 
 ##  Completed Upgrades
 

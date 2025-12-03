@@ -1,52 +1,38 @@
-# Project Structure
+# Cấu trúc dự án
 
-Complete directory structure and file organization for the OHLCV Python Connector.
+Toàn cảnh thư mục và file chính của OHLCV Python Connector.
 
----
-
-##  Root Directory
+## Thư mục gốc
 
 ```
 ohlcv-python-connector/
-├── README.md                    # Main project documentation
-├── PROJECT_STRUCTURE.md         # This file
-├── .env.example                 # Configuration template
-├── .gitignore                   # Git ignore rules
-├── requirements.txt             # Python dependencies (pip)
-├── pyproject.toml               # Poetry configuration
-├── poetry.lock                  # Dependency lock file
-├── start.sh                     # Quick start script
-├── test_imports.py              # Import validation script
+├── README.md                  # Tài liệu chính (duy nhất)
+├── .env.example               # Mẫu cấu hình môi trường
+├── .gitignore
+├── requirements.txt           # Phụ thuộc pip
+├── pyproject.toml / poetry.lock  # Phụ thuộc Poetry
+├── start.sh                   # Script khởi động WS server
+├── test_imports.py            # Smoke test import
 │
-├── docs/                        #  Documentation folder
-├── src/                         #  Source code
-└── test/                        #  Test files
+├── docs/                      # Tài liệu chi tiết
+├── src/                       # Mã nguồn
+└── test/                      # Bộ test + script integration
 ```
 
----
+## Tài liệu (`docs/`)
 
-##  Documentation (`/docs`)
+- `QUICKSTART.md`: thiết lập và chạy nhanh.
+- `PROJECT_STRUCTURE.md`: file này.
+- `DEPLOYMENT_CHECKLIST.md`: checklist triển khai/vận hành.
+- `IMPLEMENTATION_SUMMARY.md`: tóm tắt kỹ thuật/upgrade.
+- `DATA_SOURCE_AND_MAPPING.md`: mapping trường dữ liệu theo sàn.
+- `UPGRADE.md`: hướng dẫn nâng cấp/chuyển đổi.
+- `TEST_VERIFICATION.md`: kịch bản/kết quả test mẫu.
+- `CHANGES.md`: lịch sử thay đổi.
 
-All project documentation organized in one place:
+## Mã nguồn (`src/`)
 
-```
-docs/
-├── README.md                    # Documentation index and navigation
-├── QUICKSTART.md                # 5-minute setup guide
-├── UPGRADE.md                   # Comprehensive feature guide
-├── DEPLOYMENT_CHECKLIST.md      # Deployment procedures
-├── IMPLEMENTATION_SUMMARY.md    # Technical implementation details
-├── CHANGES.md                   # Version history and changelog
-└── data_sources_and_mapping.md  # Exchange API reference
-```
-
-**Navigation:** Start with [docs/README.md](docs/README.md)
-
----
-
-##  Source Code (`/src`)
-
-Application source code following Clean Architecture:
+Kiến trúc phân lớp Clean Architecture:
 
 ```
 src/
@@ -105,7 +91,7 @@ src/
 │       ├── client.py
 │       └── repositories.py
 │
-└── interfaces/                  #  Entry points layer
+└── interfaces/                  #  Entry points
     ├── __init__.py
     ├── repository_factory.py    # Dependency injection factory
     ├── health_server.py         # HTTP health check server

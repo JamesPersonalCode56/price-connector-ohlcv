@@ -1,123 +1,104 @@
 # OHLCV Python Connector
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Production Ready](https://img.shields.io/badge/production-ready-green.svg)](https://github.com)
+Kết nối và stream dữ liệu nến (OHLCV) 1 phút thời gian thực từ nhiều sàn giao dịch tiền mã hóa với độ tin cậy và hiệu năng cao, áp dụng Clean Architecture.
 
-**Production-grade cryptocurrency market data connector** implementing Clean Architecture principles. Streams real-time OHLCV (candlestick) data from multiple exchanges with enterprise-level reliability, observability, and performance.
+## Tổng quan nhanh
 
----
+- Sàn hỗ trợ: Binance (Spot, USDT-M, Coin-M), OKX (Spot, Swap), Bybit (Spot, Linear, Inverse), Gate.io (Spot, USDT-M, Coin-M), Hyperliquid (Perp, Spot).
+- Kiến trúc: phân lớp domain/application/infrastructure, client WebSocket chung, circuit breaker, tự động reconnect + REST backfill, queue hai tầng kèm dedup.
+- Quan sát: log có cấu trúc, Prometheus metrics, healthcheck HTTP, theo dõi tình trạng kết nối sàn.
+- Vận hành: graceful shutdown, sẵn sàng K8s, cấu hình linh hoạt, tương thích ngược.
 
-##  Overview
-
-This connector provides a unified interface to stream 1-minute candlestick data from 5 major cryptocurrency exchanges:
-
-- **Binance** (Spot, USDT-M Futures, Coin-M Futures)
-- **OKX** (All instrument types)
-- **Bybit** (Spot, Linear, Inverse)
-- **Gate.io** (Spot, USDT-M, Coin-M)
-- **Hyperliquid** (Perpetuals, Spot)
-
-### Key Features
-
- **Production-Ready Reliability**
-- Circuit breaker with exponential backoff
-- Automatic reconnection with REST backfill
-- Memory-bounded dual-pipeline queuing
-- Message deduplication
-
- **Full Observability**
-- Prometheus metrics export
-- Structured logging
-- HTTP health check endpoints
-- Exchange connection monitoring
-
- **High Performance**
-- HTTP/2 connection pooling
-- Fast JSON parsing (orjson)
-- Efficient memory management
-- 4-5x faster REST backfill
-
- **Operational Excellence**
-- Graceful shutdown (Kubernetes-ready)
-- Zero-downtime deployments
-- Comprehensive configuration
-- Full backward compatibility
-
----
-
-##  Quick Start
-
-### Installation
+## Cài đặt
 
 ```bash
-# Clone the repository
-cd /home/minh/main/execution_service/server_v2/ohlcv-python-connector
-
-# Install dependencies
+git clone <repo-url>
+cd ohlcv-python-connector
+# Pip
 pip install -r requirements.txt
-# or using Poetry
+# Hoặc Poetry
 poetry install
 ```
 
-### Basic Usage
+Yêu cầu: Python 3.10+, kết nối mạng tới các endpoint REST/WS của sàn.
 
-#### 1. CLI Mode (Direct Streaming)
+## Sử dụng nhanh
 
-Stream quotes directly to stdout:
-
+### Chạy CLI stream trực tiếp
 ```bash
 # Binance spot
 poetry run connector-cli binance BTCUSDT ETHUSDT --market spot --limit 10
-
-# OKX perpetual swaps
+# OKX swap
 poetry run connector-cli okx BTC-USDT-SWAP ETH-USDT-SWAP --limit 10
-
-# Bybit linear futures
+# Bybit linear
 poetry run connector-cli bybit BTCUSDT ETHUSDT --market linear --limit 10
-
 # Gate.io spot
 poetry run connector-cli gateio BTC_USDT ETH_USDT --market spot --limit 10
 ```
 
-#### 2. WebSocket Server Mode
-
-Start the WebSocket server:
-
+### Chạy WebSocket server
 ```bash
 poetry run connector-wss --host 0.0.0.0 --port 8765
 ```
-
-Connect a client:
-
+Ví dụ client:
 ```javascript
-// WebSocket client example
 const ws = new WebSocket('ws://localhost:8765');
-
 ws.onopen = () => {
-  // Subscribe to Binance spot BTC/ETH
   ws.send(JSON.stringify({
     exchange: "binance",
     contract_type: "spot",
     symbols: ["BTCUSDT", "ETHUSDT"],
-    limit: 0  // 0 = infinite stream
+    limit: 0
   }));
 };
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-
-  if (data.type === "subscribed") {
-    console.log("Subscription confirmed:", data);
-  } else if (data.type === "quote") {
-    console.log("Quote:", data);
-  } else if (data.type === "error") {
-    console.error("Error:", data);
-  }
-};
+ws.onmessage = (event) => console.log(JSON.parse(event.data));
 ```
 
-#### 3. Health Check & Metrics
+### Healthcheck và Metrics
+```bash
+curl http://localhost:8766/health
+curl http://localhost:8766/ready | jq
+curl http://localhost:8766/metrics
+```
+
+## Kiểm thử
+
+- Smoke test nhập khẩu: `python test_imports.py`
+- Test từng sàn: `poetry run python test/test_<exchange>_*.py`
+- Test batch toàn bộ symbol: `PYTHONPATH=src poetry run python test/run_all_ws_subscriptions.py --batch-size 100 --limit 1 --concurrency 10 --message-timeout 20`
+
+## Cấu trúc dự án
+
+```
+ohlcv-python-connector/
+├── src/                 # Mã nguồn chính (config, domain, application, infrastructure, interfaces)
+├── test/                # Test đơn lẻ và script integration WS
+├── docs/                # Tài liệu chi tiết (Quickstart, Upgrade, Deployment, Mapping, Changelog, ...)
+├── requirements.txt / pyproject.toml / poetry.lock
+├── start.sh
+└── README.md
+```
+
+## Cấu hình nhanh
+
+- File mẫu: `.env.example` (tùy biến kết nối, logging, metrics, backoff).
+- Biến thường dùng (ví dụ): `CONNECTOR_WS_HOST`, `CONNECTOR_WS_PORT`, `LOG_LEVEL`, `METRICS_PORT`.
+
+## Ghi chú vận hành
+
+- Tăng độ tin cậy: bật circuit breaker, giữ `message-timeout` đủ lớn cho các batch symbol thanh khoản thấp.
+- Quan sát: xuất metrics Prometheus, theo dõi healthcheck để tích hợp liveness/readiness.
+- Dừng an toàn: gửi tín hiệu SIGTERM/SIGINT, hệ thống sẽ shutdown gracefull.
+
+## Tài liệu liên quan
+
+- Hướng dẫn nhanh: `docs/QUICKSTART.md`
+- Cấu trúc dự án: `docs/PROJECT_STRUCTURE.md`
+- Checklist triển khai: `docs/DEPLOYMENT_CHECKLIST.md`
+- Tổng quan triển khai: `docs/IMPLEMENTATION_SUMMARY.md`
+- Nguồn dữ liệu & mapping: `docs/DATA_SOURCE_AND_MAPPING.md`
+- Lịch sử thay đổi: `docs/CHANGES.md`
+- Kịch bản test WS: `docs/TEST_VERIFICATION.md`
 
 When running the WebSocket server, health endpoints are automatically available:
 
